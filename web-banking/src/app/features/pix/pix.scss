@@ -1,0 +1,273 @@
+/* ============================= */
+/* ====== ESTILOS GERAIS ======= */
+/* ============================= */
+
+/* Container principal */
+.pix-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+  padding: 20px;
+}
+
+/* Card central */
+.pix-card {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 550px;
+  padding: 24px;
+}
+
+/* ============================= */
+/* ======= CABEÇALHO PIX ======= */
+/* ============================= */
+
+.pix-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 24px;
+  padding-top: 8px;
+}
+
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 4px 0;
+    background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+.pix-header h2 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 4px 0;
+  color: #333;
+}
+
+.pix-header p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Ícone e texto do banco */
+.bank-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.bank-logo .logo-icon {
+  color: #0ea5e9;
+  font-size: 28px;
+}
+
+/* Botão de voltar (seta no canto superior esquerdo) */
+.back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: #0ea5e9 !important;
+  background-color: transparent;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background-color: rgba(14, 165, 233, 0.08);
+  transform: scale(1.08);
+}
+
+.back-button mat-icon {
+  font-size: 28px;
+}
+
+/* ============================= */
+/* ======== FORMULÁRIOS ======== */
+/* ============================= */
+
+.tab-panel {
+  margin-top: 16px;
+}
+
+.pix-form {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* === Botões principais (Cadastrar / Continuar) === */
+.pix-button {
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: none;
+  padding: 10px 16px;
+  transition: all 0.25s ease;
+  background: linear-gradient(135deg, #93c5fd, #bae6fd);
+  color: #333;
+}
+
+/* Estado habilitado (form válido) → gradiente azul */
+.pix-button:not(.mat-mdc-button-disabled) {
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+  color: #fff !important;
+  box-shadow: 0 3px 10px rgba(14, 165, 233, 0.3);
+}
+
+.pix-button:not(.mat-mdc-button-disabled):hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.pix-button:not(.mat-mdc-button-disabled):active {
+  filter: brightness(0.95);
+  transform: translateY(1px);
+}
+
+/* Estado desabilitado (form inválido) */
+.pix-button.mat-mdc-button-disabled {
+  opacity: 0.7;
+  background: linear-gradient(135deg, #d1d5db, #e5e7eb);
+  color: #888 !important;
+  cursor: not-allowed;
+}
+
+/* Mensagens */
+.success {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* ============================= */
+/* ====== LISTA DE CHAVES ====== */
+/* ============================= */
+
+.keys-list {
+  margin-top: 32px;
+}
+
+.keys-list h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #0ea5e9;
+}
+
+/* Card de chave individual */
+.key-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.key-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Corrige layout interno do mat-card */
+::ng-deep .key-card .mat-mdc-card-content,
+.key-card mat-card-content {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px;
+  padding: 14px 16px !important;
+  box-sizing: border-box;
+}
+
+/* Bloco de informações (lado esquerdo) */
+.key-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.key-info p {
+  margin: 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.key-info strong {
+  color: #0ea5e9;
+  margin-right: 6px;
+}
+
+/* Botão de exclusão (lado direito) */
+.key-card button.mat-icon-button {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  color: #ef4444;
+  transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  margin-left: 8px;
+}
+
+.key-card button.mat-icon-button mat-icon {
+  font-size: 20px;
+  line-height: 20px;
+}
+
+/* Efeitos hover/active */
+.key-card button.mat-icon-button:hover {
+  background-color: rgba(239, 68, 68, 0.06);
+  color: #dc2626;
+  transform: scale(1.06);
+}
+
+.key-card button.mat-icon-button:active {
+  transform: scale(0.98);
+}
+
+/* ============================= */
+/* ====== MENSAGEM "VAZIO" ===== */
+/* ============================= */
+
+.info {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* ============================= */
+/* ======== RESPONSIVO ========= */
+/* ============================= */
+
+@media (max-width: 420px) {
+  ::ng-deep .key-card .mat-mdc-card-content,
+  .key-card mat-card-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .key-card button.mat-icon-button {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+
+  .back-button {
+    top: 12px;
+    left: 12px;
+  }
+}

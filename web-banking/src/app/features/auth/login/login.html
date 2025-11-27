@@ -1,0 +1,66 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="bank-logo">
+        <mat-icon class="logo-icon">account_balance</mat-icon>
+        <h1>Nexo Bank</h1>
+      </div>
+      <h2>Bem-vindo de volta</h2>
+      <p>Faça login na sua conta</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email" placeholder="seu@email.com">
+        <mat-icon matSuffix>email</mat-icon>
+        <mat-error *ngIf="email?.hasError('required')">
+          Email é obrigatório
+        </mat-error>
+        <mat-error *ngIf="email?.hasError('email')">
+          Email inválido
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Password Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Senha</mat-label>
+        <input matInput formControlName="password" type="password" placeholder="Sua senha">
+        <mat-icon matSuffix>lock</mat-icon>
+        <mat-error *ngIf="password?.hasError('required')">
+          Senha é obrigatória
+        </mat-error>
+        <mat-error *ngIf="password?.hasError('minlength')">
+          Senha deve ter pelo menos 6 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Error Message -->
+      <app-error-message
+        [message]="errorMessage"
+        [show]="!!errorMessage">
+    </app-error-message>
+
+
+      <!-- Submit Button -->
+      <button mat-raised-button color="primary" class="login-button full-width" [disabled]="isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+        <span *ngIf="!isLoading">Entrar</span>
+      </button>
+
+      <!-- Forgot Password -->
+      <div class="forgot-password">
+        <a routerLink="/reset-password" class="link">Esqueceu sua senha?</a>
+      </div>
+
+    </form>
+
+    <!-- Register Link -->
+    <div class="register-section">
+      <p>Não tem uma conta? 
+        <a routerLink="/register" class="register-link">Cadastre-se aqui</a>
+      </p>
+    </div>
+  </div>
+</div>

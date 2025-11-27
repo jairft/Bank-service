@@ -1,0 +1,131 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <mat-toolbar color="primary" class="dashboard-header">
+    <div class="header-content">
+      <div class="bank-info">
+        <mat-icon class="bank-icon">account_balance</mat-icon>
+        <span class="bank-name">Nexo Bank</span>
+      </div>
+
+      <div class="user-info">
+        <span>Olá, {{ accountDetails?.titular || currentUser?.nome }}</span>
+        <button mat-icon-button [matMenuTriggerFor]="userMenu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+
+        <mat-menu #userMenu="matMenu" class="user-menu">
+          <button mat-menu-item (click)="editProfile()" class="menu-item">
+            <mat-icon class="menu-icon edit-icon">edit</mat-icon>
+            <span>Editar Perfil</span>
+          </button>
+
+          <button mat-menu-item (click)="updatePassword()" class="menu-item">
+            <mat-icon class="menu-icon lock-icon">lock</mat-icon>
+            <span>Atualizar Senha</span>
+          </button>
+
+          <button mat-menu-item (click)="logout()" class="menu-item">
+            <mat-icon class="menu-icon logout-icon">logout</mat-icon>
+            <span>Sair</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <div class="dashboard-content">
+    <!-- Loading -->
+    <div *ngIf="!accountDetails" class="loading">
+      Carregando dados da conta...
+    </div>
+
+    <!-- Resumo da Conta -->
+    <div *ngIf="accountDetails" class="account-summary-section">
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>Resumo da Conta</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="balance-info">
+            <div class="balance-amount">
+              <mat-icon>account_balance_wallet</mat-icon>
+              <div class="balance-text">
+                <span class="amount">{{ formatCurrency(accountDetails.saldo) }}</span>
+              </div>
+            </div>
+
+            <div class="account-details">
+              <p>Agência {{ accountDetails.agencia }}</p>
+              <p>Conta {{ accountDetails.conta }}</p>
+              <p>{{ accountDetails.tipo }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div *ngIf="accountDetails" class="quick-actions-section">
+      <h2>Ações Rápidas</h2>
+      <div class="actions-grid">
+        <button mat-raised-button color="primary" class="action-button" routerLink="/pix">
+          <mat-icon>swap_horiz</mat-icon>
+          <span>Pix</span>
+        </button>
+
+        <button mat-raised-button color="accent" class="action-button" routerLink="/deposit">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <span>Depósito</span>
+        </button>
+
+        <button mat-raised-button color="warn" class="action-button" routerLink="/request-card">
+          <mat-icon>credit_card</mat-icon>
+          <span>Ferramentas de Cartão</span>
+        </button>
+
+        <button mat-raised-button color="secondary" class="action-button" routerLink="/transaction-password">
+          <mat-icon>lock</mat-icon>
+          <span>Senha Transacional</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Transações Recentes -->
+    <div *ngIf="accountDetails" class="transactions-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Transações Recentes</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item *ngFor="let transaction of transactions" class="transaction-item">
+              <div class="transaction-content" style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                <div class="transaction-top" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="transaction-category" style="font-weight: 500; display: flex; align-items: center; gap: 4px;">
+                    <mat-icon *ngIf="transaction.type === 'PIX'">swap_horiz</mat-icon>
+                    <mat-icon *ngIf="transaction.type === 'DEPOSIT'">arrow_downward</mat-icon>
+                    {{ transaction.type === 'PIX' ? 'PIX' : 'Depósito' }}
+                    <span *ngIf="transaction.type === 'PIX'">
+                      ({{ transaction.direction === 'IN' ? 'Entrada' : 'Saída' }})
+                    </span>
+                  </span>
+
+                  <span class="transaction-amount"
+                        [ngClass]="transaction.type === 'DEPOSIT' || transaction.direction === 'IN' ? 'text-success' : 'text-danger'"
+                        style="font-weight: bold;">
+                    {{ formatCurrency(transaction.amount) }}
+                  </span>
+                </div>
+
+                <div class="transaction-bottom" style="font-size: 12px; color: #666; display: flex; flex-wrap: wrap; gap: 6px;">
+                  <span class="transaction-date">{{ transaction.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span *ngIf="transaction.description">| {{ transaction.description }}</span>
+                </div>
+              </div>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

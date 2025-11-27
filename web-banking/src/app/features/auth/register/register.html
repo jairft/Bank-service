@@ -1,0 +1,94 @@
+<div class="register-container">
+  <mat-card class="register-card">
+
+    <div class="register-header">
+      <div class="bank-logo">
+        <mat-icon class="logo-icon">account_balance</mat-icon>
+        <h1>Nexo Bank</h1>
+      </div>
+      <h2>Crie sua conta</h2>
+      <p class="info-message">Preencha os campos abaixo para criar sua conta</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+      <div class="form-row">
+        <!-- Coluna esquerda -->
+        <div class="form-column">
+          <!-- Nome -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nome completo</mat-label>
+            <input matInput placeholder="Ex: João da Silva" formControlName="nome" />
+            <mat-error *ngIf="nome?.hasError('required')">Nome é obrigatório</mat-error>
+          </mat-form-field>
+
+          <!-- CPF -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>CPF</mat-label>
+            <input matInput placeholder="000.000.000-00" formControlName="cpf" mask="000.000.000-00" />
+            <mat-error *ngIf="cpf?.hasError('required')">CPF é obrigatório</mat-error>
+          </mat-form-field>
+
+          <!-- Email -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input matInput placeholder="exemplo@email.com" formControlName="email" />
+            <mat-error *ngIf="email?.hasError('required')">Email é obrigatório</mat-error>
+            <mat-error *ngIf="email?.hasError('email')">Formato inválido</mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Coluna direita -->
+        <div class="form-column">
+          <!-- Telefone -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Telefone</mat-label>
+            <input matInput placeholder="(00) 00000-0000" formControlName="telefone" mask="(00) 00000-0000" />
+            <mat-error *ngIf="telefone?.hasError('required')">Telefone é obrigatório</mat-error>
+          </mat-form-field>
+
+          <!-- Senha -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Senha</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" placeholder="Mínimo 6 caracteres" formControlName="password" />
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="password?.hasError('required')">Senha é obrigatória</mat-error>
+            <mat-error *ngIf="password?.hasError('minlength')">Mínimo 6 caracteres</mat-error>
+          </mat-form-field>
+
+          <!-- Confirmar Senha -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirmar senha</mat-label>
+            <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" placeholder="Repita a senha" formControlName="confirmPassword" />
+            <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+              <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="confirmPassword?.hasError('required')">Confirmação é obrigatória</mat-error>
+            <!-- Só mostra depois de clicar em cadastrar -->
+            
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Mensagem de erro global (só após submit) -->
+      <app-error-message
+              [message]="'As senhas não coincidem. Verifique e tente novamente.'"
+              [show]="showGlobalError && registerForm.errors?.['passwordMismatch']">
+      </app-error-message>
+      
+      <!-- Botão de cadastro -->
+      <button mat-raised-button color="primary" class="register-button full-width" [disabled]="isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+        <span *ngIf="!isLoading">Cadastrar</span>
+      </button>
+
+    </form>
+
+    <!-- Link para login -->
+    <div class="back-login">
+      <p>Já tem uma conta? <a routerLink="/login">Entrar</a></p>
+    </div>
+  </mat-card>
+</div>

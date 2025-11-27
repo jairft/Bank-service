@@ -1,0 +1,47 @@
+<div class="deposit-container">
+  <mat-card class="deposit-card">
+    
+    <!-- Cabeçalho com botão voltar -->
+    <div class="deposit-header">
+      <button mat-icon-button color="primary" class="back-button" (click)="router.navigate(['/dashboard'])">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <mat-icon class="logo-icon">account_balance_wallet</mat-icon>
+      <h1>Depósito</h1>
+      <p>Informe o valor que deseja depositar</p>
+    </div>
+
+    <form [formGroup]="depositForm" (ngSubmit)="onSubmit()" class="deposit-form">
+      
+      <!-- Valor -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Valor</mat-label>
+        <input matInput type="text" formControlName="amount" placeholder="R$ 0,00"
+       (input)="formatDepositAmount()" />
+
+        <mat-icon matSuffix>attach_money</mat-icon>
+        <mat-error *ngIf="amount?.hasError('required')">Valor é obrigatório</mat-error>
+    </mat-form-field>
+
+
+      <!-- Descrição -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descrição (opcional)</mat-label>
+        <input matInput type="text" formControlName="description" placeholder="Ex: Depósito em dinheiro">
+        <mat-icon matSuffix>description</mat-icon>
+      </mat-form-field>
+
+      <!-- Mensagens -->
+      <app-error-message [message]="errorMessage" [show]="!!errorMessage"></app-error-message>
+
+      <app-success-message [message]="successMessage" [show]="!!successMessage"></app-success-message>
+
+      <!-- Botão -->
+      <button mat-raised-button color="primary" type="submit" class="full-width deposit-button" [disabled]="isLoading || depositForm.invalid">
+        <span *ngIf="!isLoading">Depositar</span>
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+      </button>
+    </form>
+  </mat-card>
+</div>

@@ -1,0 +1,78 @@
+<div class="request-card-container">
+  <mat-card class="request-card">
+    <!-- Botão voltar -->
+    <button mat-icon-button class="back-button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="header-section">
+      <mat-icon class="logo-icon">credit_card</mat-icon>
+      <h1>Solicitar Cartão</h1>
+      <p>Informe a bandeira e o limite desejado para solicitar seu novo cartão.</p>
+    </div>
+
+    <!-- Formulário -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Bandeira</mat-label>
+        <mat-select formControlName="brand">
+          <mat-option *ngFor="let b of brands" [value]="b.value">{{ b.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Limite desejado (R$)</mat-label>
+        <input matInput type="number" formControlName="requestedLimit" />
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" class="submit-btn" [disabled]="isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <span *ngIf="!isLoading">Solicitar Cartão</span>
+      </button>
+    </form>
+
+    <app-error-message *ngIf="errorMessage" [message]="errorMessage"></app-error-message>
+    <app-success-message *ngIf="successMessage" [message]="successMessage"></app-success-message>
+
+    <!-- Lista de cartões -->
+    <div class="cards-section" *ngIf="userCards.length > 0">
+      <h2>Seus cartões</h2>
+
+      <div class="cards-grid">
+        <mat-card
+          class="card-item"
+          *ngFor="let card of userCards"
+          [ngClass]="{
+            'visa': card.brand === 'VISA',
+            'mastercard': card.brand === 'MASTERCARD',
+            'elo': card.brand === 'ELO',
+            'amex': card.brand === 'AMEX'
+          }"
+        >
+          <div class="card-header">
+            <!-- IMAGENS POR BANDEIRA (cada uma com *ngIf) -->
+            <img *ngIf="card.brand === 'VISA'" src="assets/brands/visa.png" alt="Visa" class="card-brand" />
+            <img *ngIf="card.brand === 'MASTERCARD'" src="assets/brands/mastercard.png" alt="Mastercard" class="card-brand" />
+            <img *ngIf="card.brand === 'ELO'" src="assets/brands/elo.png" alt="Elo" class="card-brand" />
+            <img *ngIf="card.brand === 'AMEX'" src="assets/brands/amex.png" alt="Amex" class="card-brand" />
+
+            <span class="status blocked" *ngIf="card.status === 'BLOCKED'">BLOQUEADO</span>
+            <span class="status active" *ngIf="card.status === 'ACTIVE'">ATIVO</span>
+          </div>
+
+          <div class="card-number">
+            {{ card.showFull ? card.cardNumberFull : card.cardNumberMasked }}
+            <button mat-icon-button class="toggle" (click)="card.showFull = !card.showFull">
+              <mat-icon>{{ card.showFull ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+
+          <div class="card-info">
+            <p>Validade: {{ card.expiry }}</p>
+            <p>Limite: R$ {{ card.approvedLimit | number:'1.0-0' }}</p>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+  </mat-card>
+</div>

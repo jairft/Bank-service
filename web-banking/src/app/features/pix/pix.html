@@ -1,0 +1,151 @@
+<div class="pix-container">
+  <div class="pix-card">
+
+    <!-- Cabeçalho com botão voltar -->
+    <div class="pix-header">
+      <button mat-icon-button color="primary" class="back-button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div class="bank-logo">
+        <mat-icon class="logo-icon">account_balance</mat-icon>
+        <h1>Transferência Pix</h1>
+      </div>
+      <h3>Gerencie suas chaves PIX</h3>
+      <p>Cadastre, busque e transfira com segurança</p>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group>
+
+      <!-- Aba: Cadastrar chave -->
+      <mat-tab label="Cadastrar Chave">
+        <div class="tab-panel">
+          <form [formGroup]="pixKeyForm" (ngSubmit)="onRegister()" class="pix-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Tipo de Chave</mat-label>
+              <mat-select formControlName="keyType">
+                <mat-option value="CPF">CPF</mat-option>
+                <mat-option value="EMAIL">E-mail</mat-option>
+                <mat-option value="TELEFONE">Telefone</mat-option>
+                <mat-option value="RANDOM">Aleatória</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button class="pix-button" type="submit" 
+              [ngClass]="{'gradient-button': pixKeyForm.valid}" 
+              [disabled]="pixKeyForm.invalid">
+              Cadastrar
+            </button>
+
+            <app-success-message [message]="successMessage" [show]="!!successMessage"></app-success-message>
+            <app-error-message [message]="errorMessage" [show]="!!errorMessage"></app-error-message>
+
+          </form>
+
+          <!-- Lista de chaves cadastradas -->
+          <div class="keys-list" *ngIf="pixKeys.length > 0">
+            <h3>Suas Chaves Cadastradas</h3>
+
+            <mat-card *ngFor="let key of pixKeys" class="key-card">
+              <mat-card-content class="key-row">
+                <div class="key-info">
+                  <p><strong>Tipo:</strong> {{ key.keyType }}</p>
+                  <p><strong>Valor:</strong> {{ key.keyValue }}</p>
+                </div>
+                <button mat-icon-button color="warn" (click)="onDeleteKey(key.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <p *ngIf="pixKeys.length === 0" class="info">
+            Nenhuma chave cadastrada ainda.
+          </p>
+        </div>
+      </mat-tab>
+
+      <!-- Aba: Transferência PIX -->
+      <mat-tab label="Transferência PIX">
+        <div class="tab-panel">
+
+          <!-- Passo 1: Buscar chave -->
+          <div *ngIf="!selectedPixKey">
+            <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="pix-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tipo da chave</mat-label>
+                <mat-select formControlName="keyType">
+                  <mat-option value="CPF">CPF</mat-option>
+                  <mat-option value="EMAIL">E-mail</mat-option>
+                  <mat-option value="TELEFONE">Telefone</mat-option>
+                  <mat-option value="RANDOM">Aleatória</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Valor da chave (ex: maria@email.com)</mat-label>
+                <input matInput formControlName="keyValue" />
+              </mat-form-field>
+
+              <app-error-message [message]="errorMessage" [show]="!!errorMessage"></app-error-message>
+
+              <button mat-raised-button class="pix-button" type="submit" 
+                [ngClass]="{'gradient-button': searchForm.valid}" 
+                [disabled]="searchForm.invalid">
+                Continuar
+              </button>
+
+              
+            </form>
+          </div>
+
+          <!-- Passo 2: Confirmar e transferir -->
+          <div *ngIf="selectedPixKey">
+            <mat-card class="recipient-card">
+              <mat-card-title style="padding: 10px 0px 0px 15px;">Destinatário</mat-card-title>
+              <mat-card-content>
+                <p><strong>Nome:</strong> {{ selectedPixKey.ownerName }}</p>
+                <p><strong>Banco:</strong> {{ selectedPixKey.bank }}</p>
+                <p><strong>Chave:</strong> {{ selectedPixKey.keyValue }}</p>
+              </mat-card-content>
+            </mat-card>
+
+            <form [formGroup]="transferForm" (ngSubmit)="onTransfer()" class="pix-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Valor</mat-label>
+                <input matInput type="text" formControlName="amount" placeholder="0,00" (input)="formatPixAmount()" />
+            </mat-form-field>
+
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Senha transacional</mat-label>
+                <input matInput type="password" formControlName="password" maxlength="6" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Descrição (opcional)</mat-label>
+                <input matInput formControlName="description" />
+              </mat-form-field>
+
+              <div class="actions">
+            
+                <button mat-raised-button color="accent" class="pix-button" type="submit" 
+                  [ngClass]="{'gradient-button': transferForm.valid}" 
+                  [disabled]="transferForm.invalid">
+                  Confirmar Transferência
+                </button>
+              </div>
+
+              <app-success-message [message]="successMessage" [show]="!!successMessage"></app-success-message>
+              <app-error-message [message]="errorMessage" [show]="!!errorMessage"></app-error-message>
+
+            </form>
+          </div>
+
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </div>
+</div>

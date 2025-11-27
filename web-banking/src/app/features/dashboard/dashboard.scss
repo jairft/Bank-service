@@ -1,0 +1,325 @@
+/* ======== Responsividade ======== */
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 16px;
+  }
+
+  .summary-card .balance-amount mat-icon {
+    font-size: 36px;
+  }
+
+  .summary-card .balance-amount .amount {
+    font-size: 32px;
+  }
+
+  .summary-card .account-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .summary-card .account-details p {
+    width: 100%;
+    text-align: center;
+  }
+
+  .quick-actions-section .actions-grid {
+    flex-direction: column;
+  }
+
+  .quick-actions-section .action-button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .transactions-section .transaction-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .transactions-section .transaction-right {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-card .balance-amount .amount {
+    font-size: 26px;
+  }
+
+  .summary-card .balance-amount mat-icon {
+    font-size: 28px;
+  }
+}
+
+/* ======== Dashboard Base ======== */
+.dashboard-container {
+  background: #f5faff;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Header */
+.dashboard-header {
+  background: linear-gradient(90deg, #0ea5e9 0%, #06b6d4 100%);
+  color: #fff;
+}
+
+.dashboard-header .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dashboard-header .bank-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-header .bank-info .bank-icon {
+  font-size: 28px;
+  color: #fff;
+}
+
+.dashboard-header .bank-info .bank-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dashboard-header .user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-header .user-info span {
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Conteúdo */
+.dashboard-content {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Resumo da Conta */
+.summary-card {
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 30px 20px 40px 20px; /* mais padding-bottom para não esconder o saldo */
+  background: #fff;
+  margin-bottom: 24px; /* espaço extra entre resumo e transações */
+}
+
+.summary-card .mat-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.summary-card .balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-card .balance-amount {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.summary-card .balance-amount mat-icon {
+  font-size: 48px;
+  color: #06b6d4;
+}
+
+.summary-card .balance-amount .amount {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.summary-card .account-details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.summary-card .account-details p {
+  margin: 0;
+  background: #e0f2fe;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+/* Ações Rápidas */
+.quick-actions-section {
+  margin-top: 32px;
+}
+
+.quick-actions-section h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.quick-actions-section .actions-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-actions-section .action-button {
+  flex: 1;
+  min-width: 160px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.quick-actions-section .action-button.secondary {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.quick-actions-section .action-button:hover {
+  background: linear-gradient(90deg, #0284c7, #0891b2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.quick-actions-section .action-button.secondary:hover {
+  background: linear-gradient(90deg, #d97706, #b45309);
+}
+
+.quick-actions-section .action-button mat-icon {
+  font-size: 22px;
+}
+
+/* Transações */
+.transactions-section {
+  margin-top: 25px;
+}
+
+.transactions-section mat-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #fff;
+}
+
+.transactions-section .transaction-item {
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.transactions-section .transaction-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.transactions-section .transaction-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  word-wrap: break-word;
+}
+
+.transactions-section .transaction-top {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.transactions-section .transaction-bottom {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transactions-section .transaction-category {
+  font-weight: 600;
+}
+
+.transactions-section .transaction-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.transactions-section .transaction-right {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.transactions-section .transaction-pix-key {
+  word-break: break-all;
+}
+
+.transactions-section .text-success {
+  color: #10b981 !important;
+}
+
+.transactions-section .text-danger {
+  color: #ef4444 !important;
+}
+
+.transaction-amount {
+  padding-top: 30px;
+}
+
+.transaction-category {
+  padding-top: 30px;
+}
+.transaction-bottom {
+  margin-bottom: 20px;
+}
+/* Menu do usuário */
+.user-menu .menu-item {
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.user-menu .menu-item:hover {
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  color: #fff;
+}
+
+.menu-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.lock-icon {
+  color: #0284c7;
+}
+
+.logout-icon {
+  color: #d32f2f;
+}

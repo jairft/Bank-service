@@ -1,0 +1,212 @@
+/* Fundo em gradiente */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Card central */
+.register-card {
+  width: 650px;
+  padding: 32px 28px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Cabeçalho */
+.register-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.bank-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.logo-icon {
+  font-size: 36px;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.register-header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.register-header h2 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #444;
+  margin: 8px 0;
+}
+
+/* Campos */
+mat-form-field {
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Layout de colunas */
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Botão */
+.register-button {
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 48px !important;
+  font-weight: bold !important;
+  border-radius: 8px !important;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease-in-out !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.register-button:hover {
+  background: linear-gradient(90deg, #0284c7, #0891b2, #22d3ee);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.register-button:active {
+  transform: translateY(0px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Mensagens */
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d32f2f;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.error-message mat-icon {
+  margin-right: 6px;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2e7d32;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.success-message mat-icon {
+  margin-right: 6px;
+}
+
+/* Link Voltar */
+.back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  color: #0ea5e9;
+}
+
+.editable-badge {
+  font-size: 12px;
+  color: #0ea5e9; /* azul chamativo */
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+
+
+.back-login a:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+/* Animação */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .register-card {
+    width: 90%;
+    padding: 24px 20px;
+  }
+
+  .logo-icon {
+    font-size: 28px;
+  }
+
+  .register-header h1 {
+    font-size: 20px;
+  }
+
+  .register-header h2 {
+    font-size: 16px;
+  }
+
+  .register-button {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-icon {
+    font-size: 24px;
+  }
+
+  .register-header h1 {
+    font-size: 18px;
+  }
+
+  .register-header h2 {
+    font-size: 14px;
+  }
+
+  .register-button {
+    height: 40px;
+    font-size: 13px;
+  }
+}
+
+

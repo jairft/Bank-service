@@ -1,0 +1,48 @@
+<div class="activate-container">
+  <mat-card class="activate-card">
+    <h2>Ativar Conta</h2>
+
+    <form [formGroup]="activateForm" (ngSubmit)="onSubmit()">
+      
+      <!-- TOKEN -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Token de Ativação</mat-label>
+        <input matInput formControlName="activationToken" placeholder="Cole o token recebido" />
+        <mat-error *ngIf="activationToken?.hasError('required')">
+          Token é obrigatório
+        </mat-error>
+      </mat-form-field>
+
+      <!-- SENHA -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Senha</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" />
+        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="password?.hasError('required')">
+          Senha é obrigatória
+        </mat-error>
+        <mat-error *ngIf="password?.hasError('minlength')">
+          Mínimo 6 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Mensagem de sucesso -->
+      <app-error-message [message]="errorMessage" [show]="!!errorMessage"></app-error-message>
+      <app-success-message [message]="successMessage" [show]="!!successMessage"></app-success-message>
+
+
+      <!-- Botão de Ativar -->
+      <button mat-raised-button color="primary" class="activate-button full-width" type="submit">
+        Ativar Conta
+      </button>
+    </form>
+
+    <!-- Link para voltar ao login -->
+    <div class="back-login">
+      <a (click)="goToLogin()">← Voltar para o login</a>
+    </div>
+
+  </mat-card>
+</div>

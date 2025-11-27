@@ -1,0 +1,189 @@
+.request-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4, #67e8f9);
+  font-family: 'Roboto', sans-serif;
+  overflow-y: auto;
+  padding: 40px 0;
+  scroll-behavior: smooth;
+}
+
+.request-card {
+  width: 700px;
+  padding: 32px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #0ea5e9;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 24px;
+
+  .logo-icon {
+    font-size: 42px;
+    color: #0ea5e9;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  p {
+    color: #555;
+    font-size: 0.95rem;
+  }
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 45px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* === SEÇÃO DE CARTÕES === */
+.cards-section {
+  margin-top: 32px;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .card-item {
+    padding: 18px;
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-brand {
+      width: 55px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+
+      &.blocked {
+        color: #f87171;
+      }
+
+      &.active {
+        color: #34d399;
+      }
+    }
+
+    .card-number {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+
+      .toggle {
+        color: #fff;
+      }
+    }
+
+    .card-info {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  /* === CORES PERSONALIZADAS POR BANDEIRA === */
+  .visa {
+    background: linear-gradient(135deg, #1a1f71, #004a99);
+  }
+
+  .mastercard {
+    background: linear-gradient(135deg, #eb001b, #f79e1b);
+  }
+
+  .elo {
+    background: linear-gradient(135deg, #000, #444);
+  }
+
+  .amex {
+    background: linear-gradient(135deg, #2e77bb, #00aaff);
+  }
+}
+
+/* Animação */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar customizada */
+.request-card-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.request-card-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.request-card-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0ea5e9, #06b6d4);
+  border-radius: 10px;
+}
+
+.request-card-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0284c7, #06b6d4);
+}

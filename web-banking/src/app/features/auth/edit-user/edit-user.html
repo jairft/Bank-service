@@ -1,0 +1,52 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    
+    <!-- Botão de Voltar -->
+    <button mat-icon-button color="primary" class="back-button" (click)="cancel()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+
+    <div class="register-header">
+      <div class="bank-logo">
+        <mat-icon class="logo-icon">account_balance</mat-icon>
+        <h1>Editar Perfil</h1>
+      </div>
+      <p>Visualize seus dados e atualize seu email ou telefone.</p>
+    </div>
+
+    <div *ngIf="loading">Carregando dados...</div>
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error</mat-icon>{{ errorMessage }}
+    </div>
+
+    <form *ngIf="!loading" (ngSubmit)="updateUser()">
+    <mat-form-field class="full-width">
+        <mat-label>Nome</mat-label>
+        <input matInput [value]="userData.nome" readonly>
+      </mat-form-field>
+
+      <mat-form-field  class="full-width readonly-field">
+        <mat-label>CPF</mat-label>
+        <input matInput [value]="userData.cpf" readonly>
+      </mat-form-field>
+
+
+      <mat-form-field class="full-width">
+        <mat-label>Email <span class="editable-badge">(editável)</span></mat-label>
+        <input matInput [(ngModel)]="userData.email" name="email">
+    </mat-form-field>
+
+    <mat-form-field class="full-width">
+    <mat-label>Telefone <span class="editable-badge">(editável)</span></mat-label>
+    <input matInput [(ngModel)]="userData.telefone" mask="(00) 00000-0000" name="telefone">
+    </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>Data de Cadastro</mat-label>
+        <input matInput [value]="userData.dataCadastro | date:'dd/MM/yyyy HH:mm'" readonly>
+      </mat-form-field>
+
+      <button mat-raised-button type="submit" class="register-button">Salvar</button>
+    </form>
+  </mat-card>
+</div>
