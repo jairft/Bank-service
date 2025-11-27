@@ -33,10 +33,15 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-        spring.json.type.mapping: userCreatedEvent:com.authservice.event.UserCreatedEvent
+        spring.json.type.mapping: userCreatedEvent:com.authservice.event.UserCreatedEvent,userUpdatedEvent:com.authservice.event.UserUpdatedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/ 
 
 jwt:
   secret: minhaChaveSecretaSuperSeguraParaSistemaBancario2024

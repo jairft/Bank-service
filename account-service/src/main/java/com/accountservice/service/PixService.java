@@ -7,28 +7,41 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.accountservice.dto.PixKeyRequestInfo;
+import com.accountservice.dto.PixKeyResponseInfo;
 import com.accountservice.dto.PixTransferRequest;
 import com.accountservice.dto.PixTransferResponse;
+import com.accountservice.exception.InsufficientBalanceException;
+import com.accountservice.exception.InvalidPixKeyException;
+import com.accountservice.exception.InvalidTransactionalPasswordException;
 import com.accountservice.model.Account;
 import com.accountservice.model.PixKey;
+import com.accountservice.model.PixKey.PixKeyType;
 import com.accountservice.model.PixTransaction;
 import com.accountservice.repository.AccountRepository;
 import com.accountservice.repository.PixKeyRepository;
 import com.accountservice.repository.PixTransactionRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class PixService {
     
     private static final Logger log = LoggerFactory.getLogger(PixService.class);
-    
+
+    @Value("${bank.info}")
+    private String bankInfo;
+
     private final TransactionalPasswordService passwordService;
     private final AccountRepository accountRepository;
     private final PixKeyRepository pixKeyRepository;
     private final PixTransactionRepository pixTransactionRepository;
     private final AccountService accountService;
+    
     
     public PixService(PixKeyRepository pixKeyRepository, 
                      PixTransactionRepository pixTransactionRepository,
@@ -104,9 +117,9 @@ public class PixService {
         return pixKeyRepository.findByUserId(userId);
     }
     
-    // INATIVAR CHAVE PIX
+    // EXCLUIR CHAVE PIX
     @Transactional
-    public void deactivatePixKey(Long userId, Long keyId) {
+    public void deletePixKey(Long userId, Long keyId) {
 
         PixKey pixKey = pixKeyRepository.findById(keyId)
             .orElseThrow(() -> new RuntimeException("Chave PIX não encontrada"));
@@ -114,86 +127,111 @@ public class PixService {
         if (!pixKey.getUserId().equals(userId)) {
             throw new RuntimeException("Chave PIX não pertence ao usuário");
         }
-        
-        pixKey.setStatus(PixKey.PixKeyStatus.INACTIVE);
-        pixKeyRepository.save(pixKey);
-        log.info("Chave PIX inativada: {}", keyId);
-    }
-    
-    // TRANSFERÊNCIA PIX
-@Transactional
-public PixTransferResponse transferPix(Long fromUserId, PixTransferRequest request, String transactionalPassword) {
-    System.out.println("🔐 Validando senha transacional para transferência PIX...");
 
-    if (!passwordService.authorizeTransaction(fromUserId, transactionalPassword)) {
-        throw new RuntimeException("Senha transacional inválida");
+        pixKeyRepository.delete(pixKey);
+        log.info("Chave PIX excluída com sucesso: {}", keyId);
     }
 
-    System.out.println("✅ Senha validada. Processando transferência PIX...");
-    log.info("Iniciando transferência PIX de {}: {} {}", fromUserId, request.getKeyType(), request.getPixKey());
 
-    // Validações iniciais
-    if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-        throw new RuntimeException("Valor da transferência deve ser maior que zero");
+    @Transactional
+     public PixKeyResponseInfo findPixKey(PixKeyRequestInfo request) {
+        PixKeyType type = request.getKeyType();
+        String value = request.getKeyValue();
+
+        PixKey pixKey = pixKeyRepository
+                .findByKeyValueAndKeyType(value, type)
+                .orElseThrow(() -> new EntityNotFoundException("Chave Pix não encontrada"));
+
+        return new PixKeyResponseInfo(
+                pixKey.getOwnerName(),
+                pixKey.getKeyType(),
+                pixKey.getKeyValue(),
+                bankInfo
+        );
     }
 
-    // Busca conta de origem
-    Account fromAccount = getPrimaryAccount(fromUserId);
+    @Transactional
+    public PixTransferResponse transferPix(
+            Long fromUserId,
+            PixTransferRequest request,
+            String keyValue,
+            String transactionalPassword) {
 
-    // Verifica saldo suficiente
-    if (!fromAccount.hasSufficientBalance(request.getAmount())) {
-        throw new RuntimeException("Saldo insuficiente para a transferência");
+        System.out.println("🔐 Validando senha transacional para transferência PIX...");
+
+        // 1️⃣ Valida senha transacional
+        if (!passwordService.authorizeTransaction(fromUserId, transactionalPassword)) {
+            throw new InvalidTransactionalPasswordException("Senha transacional inválida");
+        }
+
+        System.out.println("✅ Senha validada. Processando transferência PIX...");
+
+        // 2️⃣ Valida valor
+        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InsufficientBalanceException("Valor da transferência deve ser maior que zero");
+        }
+
+        // 3️⃣ Conta de origem
+        Account fromAccount = getPrimaryAccount(fromUserId);
+
+        // 4️⃣ Verifica saldo suficiente
+        if (!fromAccount.hasSufficientBalance(request.getAmount())) {
+            throw new InsufficientBalanceException("Saldo insuficiente para a transferência");
+        }
+
+        // 5️⃣ Busca chave PIX de destino (somente pelo valor da chave)
+        PixKey destinationKey = pixKeyRepository.findByKeyValue(keyValue)
+                .orElseThrow(() -> new InvalidPixKeyException("Chave PIX não encontrada: " + keyValue));
+
+        if (destinationKey.getStatus() != PixKey.PixKeyStatus.ACTIVE) {
+            throw new InvalidPixKeyException("Chave PIX está inativa");
+        }
+
+        // 6️⃣ Conta de destino
+        Account toAccount = getPrimaryAccount(destinationKey.getUserId());
+
+        // 7️⃣ Cria transação PIX
+        PixTransaction transaction = createPixTransaction(
+                fromUserId,
+                fromAccount.getId(),
+                destinationKey.getUserId(),
+                toAccount.getId(),
+                request,
+                destinationKey
+        );
+
+        try {
+            // 8️⃣ Executa transferência
+            executeTransfer(fromAccount, toAccount, request.getAmount());
+
+            // 9️⃣ Atualiza status
+            transaction.setStatus(PixTransaction.TransactionStatus.COMPLETED);
+            transaction.setProcessedAt(LocalDateTime.now());
+            pixTransactionRepository.save(transaction);
+     
+            System.out.println("✅ Transferência PIX concluída: " + transaction.getTransactionId());
+
+            // 🔟 Monta resposta
+            String fromTo = "DE " + fromAccount.getUserName() + " PARA " + toAccount.getUserName();
+
+            PixTransferResponse response = new PixTransferResponse();
+            response.setTransactionId(transaction.getTransactionId());
+            response.setStatus(transaction.getStatus().name());
+            response.setAmount(request.getAmount());
+            response.setFromAccount(fromTo);
+            response.setTimestamp(transaction.getProcessedAt());
+            response.setMessage("Transferência realizada com sucesso");
+
+            return response;
+
+        } catch (Exception e) {
+            transaction.setStatus(PixTransaction.TransactionStatus.FAILED);
+            pixTransactionRepository.save(transaction);
+            System.err.println("❌ Erro na transferência PIX: " + e.getMessage());
+            throw new RuntimeException("Falha na transferência: " + e.getMessage());
+        }
     }
 
-    // Busca chave PIX de destino
-    PixKey destinationKey = pixKeyRepository.findByKeyValueAndKeyType(request.getPixKey(), request.getKeyType())
-            .orElseThrow(() -> new RuntimeException("Chave PIX não encontrada: " + request.getPixKey()));
-
-    if (destinationKey.getStatus() != PixKey.PixKeyStatus.ACTIVE) {
-        throw new RuntimeException("Chave PIX está inativa");
-    }
-
-    // Busca conta de destino
-    Account toAccount = getPrimaryAccount(destinationKey.getUserId());
-
-    // Cria transação
-    PixTransaction transaction = createPixTransaction(fromUserId, fromAccount.getId(),
-            destinationKey.getUserId(), toAccount.getId(),
-            request);
-
-    try {
-        // Executa transferência
-        executeTransfer(fromAccount, toAccount, request.getAmount());
-
-        // Atualiza status da transação
-        transaction.setStatus(PixTransaction.TransactionStatus.COMPLETED);
-        transaction.setProcessedAt(LocalDateTime.now());
-        pixTransactionRepository.save(transaction);
-
-        log.info("Transferência PIX concluída: {}", transaction.getTransactionId());
-
-        // Monta resposta com nomes
-        String fromTo = "DE " + fromAccount.getUserName() + " PARA " + toAccount.getUserName();
-
-        PixTransferResponse response = new PixTransferResponse();
-        response.setTransactionId(transaction.getTransactionId());
-        response.setStatus(transaction.getStatus().name());
-        response.setAmount(request.getAmount());
-        response.setFromAccount(fromTo); // substitui número da conta pelo nome
-        response.setTimestamp(transaction.getProcessedAt());
-        response.setMessage("Transferência realizada com sucesso");
-
-        return response;
-
-    } catch (Exception e) {
-        // Em caso de erro, marca transação como falha
-        transaction.setStatus(PixTransaction.TransactionStatus.FAILED);
-        pixTransactionRepository.save(transaction);
-
-        log.error("Erro na transferência PIX: {}", e.getMessage());
-        throw new RuntimeException("Falha na transferência: " + e.getMessage());
-    }
-}
 
     
     // MÉTODOS AUXILIARES
@@ -231,8 +269,10 @@ public PixTransferResponse transferPix(Long fromUserId, PixTransferRequest reque
     }
     
     private PixTransaction createPixTransaction(Long fromUserId, Long fromAccountId, 
-                                              Long toUserId, Long toAccountId,
-                                              PixTransferRequest request) {
+                                            Long toUserId, Long toAccountId,
+                                            PixTransferRequest request,
+                                            PixKey destinationKey) { // ✅ adicionado
+
         PixTransaction transaction = new PixTransaction();
         transaction.setTransactionId(generateTransactionId());
         transaction.setFromUserId(fromUserId);
@@ -240,14 +280,15 @@ public PixTransferResponse transferPix(Long fromUserId, PixTransferRequest reque
         transaction.setToUserId(toUserId);
         transaction.setToAccountId(toAccountId);
         transaction.setAmount(request.getAmount());
-        transaction.setKeyType(request.getKeyType());
-        transaction.setPixKey(request.getPixKey());
         transaction.setDescription(request.getDescription());
         transaction.setStatus(PixTransaction.TransactionStatus.PROCESSING);
         transaction.setCreatedAt(LocalDateTime.now());
-        
+        transaction.setKeyType(destinationKey.getKeyType());
+        transaction.setPixKey(destinationKey.getKeyValue());
+
         return pixTransactionRepository.save(transaction);
     }
+
     
     private void executeTransfer(Account fromAccount, Account toAccount, BigDecimal amount) {
         // Debita da conta origem

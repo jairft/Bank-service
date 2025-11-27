@@ -6,6 +6,10 @@ import java.time.temporal.ChronoUnit;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.accountservice.exception.InvalidTransactionalPasswordException;
+import com.accountservice.exception.PasswordBlockedException;
+import com.accountservice.exception.PasswordNotSetException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,9 +43,8 @@ public class Account {
     @Column(name = "user_phone", length = 15)
     private String userPhone;
     
-    // ✅ NOVO CAMPO: Agência padrão
     @Column(name = "agency_number", nullable = false, length = 5)
-    private String agencyNumber = "00001"; // Agência padrão
+    private String agencyNumber = "0000-1"; // Agência padrão
     
     @Column(name = "account_number", unique = true, nullable = false, length = 20)
     private String accountNumber;
@@ -54,7 +57,7 @@ public class Account {
     private BigDecimal balance = BigDecimal.ZERO;
     
     @Column(name = "daily_limit", precision = 15, scale = 2)
-    private BigDecimal dailyLimit = new BigDecimal("1000.00");
+    private BigDecimal dailyLimit = new BigDecimal("3000.00");
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -65,6 +68,12 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AccountStatus status = AccountStatus.ACTIVE;
+
+    @Column(name = "activation_token", length = 100)
+    private String activationToken;
+
+    @Column(name = "activation_expires")
+    private LocalDateTime activationExpires;
 
     @Column(name = "transactional_password", length = 60)
     private String transactionalPassword;
@@ -77,6 +86,22 @@ public class Account {
     
     @Column(name = "password_blocked_until")
     private LocalDateTime passwordBlockedUntil;
+
+    public String getActivationToken() {
+        return activationToken;
+    }
+
+    public void setActivationToken(String activationToken) {
+        this.activationToken = activationToken;
+    }
+
+    public LocalDateTime getActivationExpires() {
+        return activationExpires;
+    }
+
+    public void setActivationExpires(LocalDateTime activationExpires) {
+        this.activationExpires = activationExpires;
+    }
     
     public enum AccountType {
         CORRENTE, POUPANCA, SALARIO
@@ -108,6 +133,7 @@ public class Account {
         this.passwordSet = false; // ✅ Inicializar novos campos
         this.failedAttempts = 0;
         this.passwordBlockedUntil = null;
+        
     }
 
 
@@ -280,42 +306,44 @@ public class Account {
     }
 
      public void setTransactionalPassword(String password, PasswordEncoder passwordEncoder) {
-        if (password == null || !password.matches("\\d{6}")) {
-            throw new IllegalArgumentException("Senha deve conter exatamente 6 dígitos");
+        if (password == null || !password.matches("\\d{4}")) {  
+            throw new IllegalArgumentException("Senha transicional deve conter exatamente 4 dígitos");
         }
         this.transactionalPassword = passwordEncoder.encode(password);
         this.passwordSet = true;
         this.failedAttempts = 0;
         this.passwordBlockedUntil = null;
     }
+
     
     // ✅ MÉTODO PARA VALIDAR SENHA TRANSACIONAL
     public boolean validateTransactionalPassword(String password, PasswordEncoder passwordEncoder) {
         if (passwordBlockedUntil != null && LocalDateTime.now().isBefore(passwordBlockedUntil)) {
-            throw new RuntimeException("Senha bloqueada. Tente novamente em " + 
+            throw new PasswordBlockedException("Senha bloqueada. Tente novamente em " +
                 ChronoUnit.MINUTES.between(LocalDateTime.now(), passwordBlockedUntil) + " minutos");
         }
-        
+
         if (transactionalPassword == null || !passwordSet) {
-            throw new RuntimeException("Senha transacional não configurada");
+            throw new PasswordNotSetException("Senha transacional não configurada");
         }
-        
+
         boolean isValid = passwordEncoder.matches(password, transactionalPassword);
-        
+
         if (!isValid) {
             failedAttempts++;
             if (failedAttempts >= 3) {
-                passwordBlockedUntil = LocalDateTime.now().plusMinutes(30); // Bloqueia por 30 minutos
-                throw new RuntimeException("Senha bloqueada por 30 minutos devido a múltiplas tentativas falhas");
+                passwordBlockedUntil = LocalDateTime.now().plusMinutes(30);
+                throw new PasswordBlockedException("Senha bloqueada por 30 minutos devido a múltiplas tentativas falhas");
             }
-            throw new RuntimeException("Senha incorreta. Tentativas restantes: " + (3 - failedAttempts));
+            throw new InvalidTransactionalPasswordException("Senha incorreta. Tentativas restantes: " + (3 - failedAttempts));
         } else {
-            failedAttempts = 0; // Reseta tentativas falhas
+            failedAttempts = 0;
             passwordBlockedUntil = null;
         }
-        
+
         return true;
     }
+
     
     // ✅ VERIFICAR SE SENHA ESTÁ CONFIGURADA
     public boolean isTransactionalPasswordSet() {
@@ -326,12 +354,6 @@ public class Account {
 
     public String getTransactionalPassword() {
         return transactionalPassword;
-    }
-
-
-
-    public void setTransactionalPassword(String transactionalPassword) {
-        this.transactionalPassword = transactionalPassword;
     }
 
 
@@ -368,6 +390,12 @@ public class Account {
 
     public void setPasswordBlockedUntil(LocalDateTime passwordBlockedUntil) {
         this.passwordBlockedUntil = passwordBlockedUntil;
+    }
+
+
+
+    public void setTransactionalPassword(String transactionalPassword) {
+        this.transactionalPassword = transactionalPassword;
     }
 
     

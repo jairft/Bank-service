@@ -15,6 +15,8 @@ import com.accountservice.model.PixTransaction;
 public interface PixTransactionRepository extends JpaRepository<PixTransaction, Long> {
     
     Optional<PixTransaction> findByTransactionId(String transactionId);
+
+    List<PixTransaction> findByFromAccountIdOrToAccountId(Long fromAccountId, Long toAccountId);
     
     List<PixTransaction> findByFromUserId(Long fromUserId);
     

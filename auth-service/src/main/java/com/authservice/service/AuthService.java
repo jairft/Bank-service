@@ -1,22 +1,33 @@
 package com.authservice.service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-import com.authservice.dto.*;
-import com.authservice.model.UserCredentials;
-import com.authservice.model.UserStatus;
-import com.authservice.repository.UserCredentialsRepository;
-import com.authservice.security.JwtTokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import com.authservice.dto.ActivateAccountRequest;
+import com.authservice.dto.ActivationResponse;
+import com.authservice.dto.CreatePasswordRequest;
+import com.authservice.dto.LoginRequest;
+import com.authservice.dto.LoginResponse;
+import com.authservice.dto.ResetPasswordRequest;
+import com.authservice.dto.UpdatePasswordRequest;
+import com.authservice.dto.ValidateTokenResponse;
+import com.authservice.exception.AccountInactiveException;
+import com.authservice.exception.InvalidCredentialsException;
+import com.authservice.exception.InvalidPasswordException;
+import com.authservice.exception.TokenExpiredException;
+import com.authservice.exception.UserNotFoundException;
+import com.authservice.model.UserCredentials;
+import com.authservice.model.UserStatus;
+import com.authservice.repository.UserCredentialsRepository;
+import com.authservice.security.JwtTokenUtil;
 
 @Service
 public class AuthService {
@@ -32,71 +43,65 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // 🔹 LOGIN
     public LoginResponse login(LoginRequest request) {
         log.info("Tentativa de login para: {}", request.getEmail());
 
-        Optional<UserCredentials> credentialsOpt = credentialsRepository.findByEmail(request.getEmail());
+        UserCredentials credentials = credentialsRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("Email ou senha inválidos"));
 
-        if (credentialsOpt.isEmpty()) {
-            log.warn("Credenciais não encontradas para: {}", request.getEmail());
-            throw new RuntimeException("Credenciais inválidas");
-        }
-
-        UserCredentials credentials = credentialsOpt.get();
-
-        // Verifica status do usuário
-        if (credentials.getStatus() != UserStatus.ACTIVE) {
-            log.warn("Usuário não está ativo: {}", request.getEmail());
-            throw new RuntimeException("Usuário não está ativo");
-        }
-
-        // Verifica senha
+        // primeiro valida a senha
         if (!passwordEncoder.matches(request.getPassword(), credentials.getPassword())) {
-            log.warn("Senha incorreta para: {}", request.getEmail());
-            throw new RuntimeException("Credenciais inválidas");
+            throw new InvalidCredentialsException("Email ou senha inválidos");
         }
 
-        // Atualiza último login
+        // depois verifica status
+        if (credentials.getStatus() == UserStatus.PENDING_ACTIVATION) {
+            resendActivationToken(request.getEmail());
+            // retorna algo que o front pode usar para redirecionar
+            return new LoginResponse(null, null, null, "PENDING_ACTIVATION");
+        }
+
+        if (credentials.getStatus() == UserStatus.INACTIVE) {
+            return new LoginResponse(null, null, null, "INACTIVE");
+        }
+
+        // usuário ativo, login normal
         credentials.setLastLogin(LocalDateTime.now());
         credentialsRepository.save(credentials);
 
-        // Gera token JWT
         String token = jwtTokenUtil.generateToken(credentials.getEmail(), credentials.getUserId());
 
-        log.info("Login realizado com sucesso para: {}", request.getEmail());
+        log.info("TOKEN JWT: {}", token);
 
-        return new LoginResponse(token, credentials.getUserId(), credentials.getEmail(), "Usuário");
+        log.info("Login realizado com sucesso para: {}", request.getEmail());
+        return new LoginResponse(token, credentials.getUserId(), credentials.getEmail(), credentials.getStatus().name());
     }
 
+    // 🔹 CREATE INITIAL PASSWORD
     @Transactional
     public void createInitialPassword(CreatePasswordRequest request) {
         if (!jwtTokenUtil.validateToken(request.getToken())) {
-            throw new RuntimeException("Token inválido ou expirado");
+            throw new TokenExpiredException("Token inválido ou expirado");
         }
 
-        String email = jwtTokenUtil.getEmailFromToken(request.getToken());
         Long userId = jwtTokenUtil.getUserIdFromToken(request.getToken());
 
-        Optional<UserCredentials> credentialsOpt = credentialsRepository.findByUserId(userId);
-
-        if (credentialsOpt.isEmpty()) {
-            throw new RuntimeException("Credenciais não encontradas");
-        }
-
-        UserCredentials credentials = credentialsOpt.get();
+        UserCredentials credentials = credentialsRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("Credenciais não encontradas"));
 
         if (credentials.getStatus() != UserStatus.PENDING_PASSWORD) {
-            throw new RuntimeException("Senha já foi definida anteriormente");
+            throw new InvalidPasswordException("Senha de acesso já foi definida anteriormente");
         }
 
-        // Define nova senha
         credentials.setPassword(passwordEncoder.encode(request.getNewPassword()));
         credentials.setStatus(UserStatus.ACTIVE);
         credentialsRepository.save(credentials);
 
-        log.info("Senha definida com sucesso para usuário: {}", email);
+        log.info("Senha de acesso definida com sucesso para usuário: {}", credentials.getEmail());
     }
 
+    // 🔹 VALIDATE TOKEN
     public ValidateTokenResponse validateToken(String token) {
         try {
             if (jwtTokenUtil.validateToken(token)) {
@@ -111,84 +116,72 @@ public class AuthService {
         }
     }
 
+    // 🔹 GENERATE SETUP TOKEN
     public String generateSetupToken(String email) {
-        Optional<UserCredentials> credentialsOpt = credentialsRepository.findByEmail(email);
-
-        if (credentialsOpt.isEmpty()) {
-            throw new RuntimeException("Usuário não encontrado");
-        }
-
-        UserCredentials credentials = credentialsOpt.get();
+        UserCredentials credentials = credentialsRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         if (credentials.getStatus() != UserStatus.PENDING_PASSWORD) {
-            throw new RuntimeException("Senha já foi definida");
+            throw new InvalidPasswordException("Senha já foi definida");
         }
 
-        // Gera token para definição de senha (expira em 1 hora)
         return jwtTokenUtil.generateToken(credentials.getEmail(), credentials.getUserId());
     }
 
+    // 🔹 ACTIVATE ACCOUNT
     @Transactional
     public ActivationResponse activateAccount(ActivateAccountRequest request) {
         log.info("Tentativa de ativação com token: {}", request.getActivationToken());
-        
-        // Validações básicas
-        if (request.getActivationToken() == null || request.getActivationToken().trim().isEmpty()) {
-            throw new RuntimeException("Token de ativação é obrigatório");
-        }
-        
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Senhas não coincidem");
-        }
-        
-        if (request.getPassword().length() < 6) {
-            throw new RuntimeException("Senha deve ter no mínimo 6 caracteres");
-        }
-        
-        // Busca credenciais pelo token
-        Optional<UserCredentials> credentialsOpt = credentialsRepository.findByActivationToken(request.getActivationToken());
-        
-        if (credentialsOpt.isEmpty()) {
-            log.warn("Token não encontrado: {}", request.getActivationToken());
-            throw new RuntimeException("Token de ativação inválido ou expirado");
-        }
-        
-        UserCredentials credentials = credentialsOpt.get();
-        
-        // Verifica se o token expirou
-        if (credentials.getActivationExpires() != null && 
-            credentials.getActivationExpires().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token de ativação expirado");
-        }
-        
-        // Verifica se já está ativo
-        if (credentials.getStatus() == UserStatus.ACTIVE) {
-            throw new RuntimeException("Conta já está ativa");
-        }
-        
-        try {
-            // Define a senha e ativa a conta
-            credentials.setPassword(passwordEncoder.encode(request.getPassword()));
-            credentials.setStatus(UserStatus.ACTIVE);
-            credentials.setActivationToken(null); // Remove o token
-            credentials.setActivationExpires(null);
-            credentialsRepository.save(credentials);
-            
-            log.info("✅ Conta ativada com sucesso para: {}", credentials.getEmail());
-            
-            return new ActivationResponse("Conta ativada com sucesso", credentials.getEmail(), true);
-            
-        } catch (Exception e) {
-            log.error("Erro ao ativar conta: {}", e.getMessage());
-            throw new RuntimeException("Erro interno ao ativar conta");
-        }
-}
 
-    public UserCredentials getCredentialsByEmail(String email) {
-        return credentialsRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Credenciais não encontradas para: " + email));
+        // Valida token
+        if (request.getActivationToken() == null || request.getActivationToken().trim().isEmpty()) {
+            log.warn("Token de ativação ausente na requisição");
+            throw new InvalidPasswordException("Token de ativação ausente na requisição");
+        }
+
+        // Busca credenciais pelo token de ativação
+        UserCredentials credentials = credentialsRepository.findByActivationToken(request.getActivationToken())
+                .orElseThrow(() -> {
+                    log.warn("Token inválido ou expirado: {}", request.getActivationToken());
+                    return new InvalidPasswordException("Token ou senha inválidos");
+                });
+
+        // Verifica se token expirou
+        if (credentials.getActivationExpires() != null && credentials.getActivationExpires().isBefore(LocalDateTime.now())) {
+            log.warn("Token expirado para email {}", credentials.getEmail());
+            throw new InvalidPasswordException("Token expirado");
+        }
+
+        // Verifica se conta já está ativa
+        if (credentials.getStatus() == UserStatus.ACTIVE) {
+            log.info("Conta já está ativa para email {}", credentials.getEmail());
+            throw new InvalidPasswordException("Conta já está ativa");
+        }
+
+        // Valida senha
+        if (!passwordEncoder.matches(request.getPassword(), credentials.getPassword())) {
+            log.warn("Senha informada não confere para email {}", credentials.getEmail());
+            throw new InvalidPasswordException("Token ou senha inválidos");
+        }
+
+        // Ativa a conta sem alterar a senha
+        credentials.setStatus(UserStatus.ACTIVE);
+        credentials.setActivationToken(null);
+        credentials.setActivationExpires(null);
+        credentialsRepository.save(credentials);
+
+        log.info("✅ Conta ativada com sucesso para: {}", credentials.getEmail());
+        return new ActivationResponse("Conta ativada com sucesso", credentials.getEmail(), true);
     }
 
+
+    // 🔹 GET CREDENTIALS
+    public UserCredentials getCredentialsByEmail(String email) {
+        return credentialsRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Credenciais não encontradas para: " + email));
+    }
+
+    // 🔹 GET ACTIVATION STATUS
     public Map<String, Object> getActivationStatus(String email) {
         try {
             UserCredentials credentials = getCredentialsByEmail(email);
@@ -199,131 +192,111 @@ public class AuthService {
             status.put("requiresActivation", credentials.getStatus() == UserStatus.PENDING_ACTIVATION);
             status.put("activationToken", credentials.getActivationToken());
             return status;
-        } catch (RuntimeException ex) {
+        } catch (UserNotFoundException ex) {
             Map<String, Object> status = new HashMap<>();
             status.put("error", "Usuário não encontrado");
             return status;
         }
     }
 
+    // 🔹 RESEND ACTIVATION TOKEN
     public String resendActivationToken(String email) {
         UserCredentials credentials = credentialsRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         if (credentials.getStatus() == UserStatus.ACTIVE) {
-            throw new RuntimeException("Conta já está ativa");
+            throw new InvalidPasswordException("Conta já está ativa");
         }
 
-        // Gera novo token
         String newToken = generateActivationToken();
         credentials.setActivationToken(newToken);
         credentials.setActivationExpires(LocalDateTime.now().plusHours(24));
         credentialsRepository.save(credentials);
 
-        log.info("Novo token de ativação gerado para: {}", email);
-
+        log.info("✅ Novo token de ativação gerado para: {}", email);
+        log.info("🔐 Token de redefinição gerado: {}", newToken);
         return newToken;
     }
 
     private String generateActivationToken() {
-        return UUID.randomUUID().toString();
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 20);
     }
 
+    // 🔹 UPDATE PASSWORD
     @Transactional
     public String updatePassword(Long userId, UpdatePasswordRequest request) {
-        log.info("Atualizando senha para usuário ID: {}", userId);
-        
-        // Validações
-        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-            throw new RuntimeException("Nova senha e confirmação não coincidem");
-        }
-        
-        if (request.getNewPassword().length() < 6) {
-            throw new RuntimeException("Nova senha deve ter no mínimo 6 caracteres");
-        }
-        
-        // Busca o usuário
         UserCredentials credentials = credentialsRepository.findByUserId(userId)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        
-        // Verifica se a conta está ativa
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
         if (credentials.getStatus() != UserStatus.ACTIVE) {
-            throw new RuntimeException("Conta não está ativa");
+            throw new AccountInactiveException("Conta não está ativa");
         }
-        
-        // Verifica a senha atual
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new InvalidPasswordException("Nova senha de acesso e confirmação não coincidem");
+        }
+
+        if (request.getNewPassword().length() < 6) {
+            throw new InvalidPasswordException("Nova senha de acesso deve ter no mínimo 6 caracteres");
+        }
+
         if (!passwordEncoder.matches(request.getCurrentPassword(), credentials.getPassword())) {
-            throw new RuntimeException("Senha atual incorreta");
+            throw new InvalidPasswordException("Senha de acesso atual incorreta");
         }
-        
-        // Verifica se a nova senha é diferente da atual
+
         if (passwordEncoder.matches(request.getNewPassword(), credentials.getPassword())) {
-            throw new RuntimeException("Nova senha deve ser diferente da senha atual");
+            throw new InvalidPasswordException("Nova senha de acesso deve ser diferente da senha atual");
         }
-        
-        // Atualiza a senha
+
         credentials.setPassword(passwordEncoder.encode(request.getNewPassword()));
         credentialsRepository.save(credentials);
-        
-        log.info("Senha atualizada com sucesso para usuário: {}", credentials.getEmail());
-        
-        return "Senha atualizada com sucesso";
-    }
-    @Transactional
-    public String resetPassword(ResetPasswordRequest request) {
-        log.info("Redefinindo senha para: {}", request.getEmail());
-        
-        // Validações
-        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-            throw new RuntimeException("Nova senha e confirmação não coincidem");
-        }
-        
-        // Busca o usuário
-        UserCredentials credentials = credentialsRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        
-        // Verifica se a conta está ativa
-        if (credentials.getStatus() != UserStatus.ACTIVE) {
-            throw new RuntimeException("Conta não está ativa");
-        }
-        
-        // Gera um token de reset temporário (em produção, enviaria por email)
-        String resetToken = generateActivationToken();
-        credentials.setActivationToken(resetToken);
-        credentials.setActivationExpires(LocalDateTime.now().plusHours(1)); // Expira em 1 hora
-        
-        credentialsRepository.save(credentials);
-        
-        log.info("Token de redefinição gerado para: {}", request.getEmail());
-        log.info("Reset Token: {}", resetToken);
-        
-        // Em produção, aqui enviaríamos um email com o token
-        // Por enquanto, retornamos o token no log
-        
-        return "Token de redefinição gerado. Verifique os logs do servidor.";
+
+        log.info("Senha de acesso atualizada com sucesso para usuário: {}", credentials.getEmail());
+        return "Senha de acesso atualizada com sucesso";
     }
 
+    // 🔹 REQUEST PASSWORD RESET
     @Transactional
-    public String confirmResetPassword(String resetToken, String newPassword) {
-        log.info("Confirmando redefinição com token: {}", resetToken);
-        
-        // Busca credenciais pelo token de reset
-        UserCredentials credentials = credentialsRepository.findByActivationToken(resetToken)
-            .orElseThrow(() -> new RuntimeException("Token de redefinição inválido"));
-        
-        // Verifica se o token expirou
-        if (credentials.getActivationExpires().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token de redefinição expirado");
+    public String requestPasswordReset(String email) {
+        UserCredentials credentials = credentialsRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        if (credentials.getStatus() != UserStatus.ACTIVE) {
+            throw new AccountInactiveException("Conta não está ativa");
         }
-        
-        // Atualiza a senha
-        credentials.setPassword(passwordEncoder.encode(newPassword));
-        credentials.setActivationToken(null); // Remove o token
+
+        String resetToken = generateActivationToken();
+        credentials.setActivationToken(resetToken);
+        credentials.setActivationExpires(LocalDateTime.now().plusHours(1));
+        credentialsRepository.save(credentials);
+
+        return "Token de redefinição gerado. Verifique seu e-mail.";
+    }
+
+    // 🔹 CONFIRM PASSWORD RESET
+    @Transactional
+    public String confirmPasswordReset(ResetPasswordRequest request) {
+        if (request.getToken() == null || request.getToken().isBlank()) {
+            throw new InvalidPasswordException("Token é obrigatório");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new InvalidPasswordException("Nova senha e confirmação não coincidem");
+        }
+
+        UserCredentials credentials = credentialsRepository.findByActivationToken(request.getToken())
+                .orElseThrow(() -> new TokenExpiredException("Token inválido"));
+
+        if (credentials.getActivationExpires().isBefore(LocalDateTime.now())) {
+            throw new TokenExpiredException("Token expirado");
+        }
+
+        credentials.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        credentials.setActivationToken(null);
         credentials.setActivationExpires(null);
         credentialsRepository.save(credentials);
-        
-        log.info("Senha redefinida com sucesso para: {}", credentials.getEmail());
-        
-        return "Senha redefinida com sucesso";
+
+        log.info("✅ Senha redefinida com sucesso para o e-mail: {}", credentials.getEmail());
+        return "Senha redefinida com sucesso.";
     }
 }

@@ -8,11 +8,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.userservice.dto.CreateUserRequest;
+import com.userservice.dto.UpdateUserRequest;
 import com.userservice.dto.UserResponse;
 import com.userservice.service.UserService;
 
@@ -30,7 +32,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         log.info("Recebida requisição para criar usuário: {}", request.getEmail());
         UserResponse response = userService.createUser(request);
@@ -43,6 +45,15 @@ public class UserController {
         UserResponse response = userService.getUserById(id);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable Long id,
+            @RequestBody UpdateUserRequest request) {
+        UserResponse response = userService.updateUser(id, request);
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("/cpf/{cpf}")
     public ResponseEntity<UserResponse> getUserByCpf(@PathVariable String cpf) {

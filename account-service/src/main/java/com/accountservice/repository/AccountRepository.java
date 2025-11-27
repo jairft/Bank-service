@@ -14,6 +14,12 @@ import com.accountservice.model.Account;
 public interface AccountRepository extends JpaRepository<Account, Long> {
     
     Optional<Account> findByAccountNumber(String accountNumber);
+
+    Optional<Account> findByUserEmail(String email);
+    
+    Optional<Account> findFirstByUserId(Long userId);
+
+    Optional<Account> findByActivationToken(String activationToken);
     
     List<Account> findByUserId(Long userId);
     

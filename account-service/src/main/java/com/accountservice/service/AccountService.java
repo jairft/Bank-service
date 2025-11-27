@@ -53,11 +53,36 @@ public class AccountService {
         
         return savedAccount;
     }
-    
-    
-    public List<Account> getUserAccounts(Long userId) {
-        return accountRepository.findByUserId(userId);
+
+    @Transactional
+    public Account updateAccountUser(Long userId, String newEmail, String newPhone) {
+        Account account = getPrimaryAccount(userId); // Pega a conta principal do usuário
+
+        boolean updated = false;
+
+        if (newEmail != null && !newEmail.equals(account.getUserEmail())) {
+            account.setUserEmail(newEmail);
+            updated = true;
+        }
+
+        if (newPhone != null && !newPhone.equals(account.getUserPhone())) {
+            account.setUserPhone(newPhone);
+            updated = true;
+        }
+
+        if (!updated) {
+            log.info("Nenhuma alteração detectada para a conta do usuário {}", userId);
+            return account;
+        }
+
+        Account updatedAccount = accountRepository.save(account);
+        log.info("Conta do usuário {} atualizada com sucesso", userId);
+        log.info("   📧 Email: {}", updatedAccount.getUserEmail());
+        log.info("   📱 Telefone: {}", updatedAccount.getUserPhone());
+
+        return updatedAccount;
     }
+
     
     public Optional<Account> getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber);
@@ -109,6 +134,25 @@ public class AccountService {
 
     public Account updateAccount(Account account) {
         return accountRepository.save(account);
+    }
+
+    public Account getPrimaryAccount(Long userId) {
+        Optional<Account> accountOpt = accountRepository.findByUserId(userId)
+            .stream()
+            .findFirst(); // assume que a primeira conta é a principal
+
+        if (accountOpt.isEmpty()) {
+            throw new RuntimeException("Conta principal do usuário " + userId + " não encontrada");
+        }
+
+        return accountOpt.get();
+    }
+
+    /**
+     * Retorna todas as contas do usuário (opcional)
+     */
+    public List<Account> getUserAccounts(Long userId) {
+        return accountRepository.findByUserId(userId);
     }
     
 }

@@ -1,6 +1,7 @@
 package com.userservice.event;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,27 +13,31 @@ import lombok.NoArgsConstructor;
 public class UserCreatedEvent {
     private String eventId;
     private String eventType = "USER_CREATED";
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp;
     private String correlationId;
-
-    // Dados do usuário
     private Long userId;
     private String cpf;
     private String nome;
     private String email;
     private String telefone;
+    private String password;
     private LocalDateTime dataCadastro;
+    
 
-    public UserCreatedEvent(Long userId, String cpf, String nome, String email, String telefone) {
-        this.eventId = java.util.UUID.randomUUID().toString();
-        this.userId = userId;
-        this.cpf = cpf;
-        this.nome = nome;
-        this.email = email;
-        this.telefone = telefone;
-        this.dataCadastro = LocalDateTime.now();
-        this.correlationId = java.util.UUID.randomUUID().toString();
-    }
+    public UserCreatedEvent(Long userId, String cpf, String nome, String email, String telefone,
+                        LocalDateTime dataCadastro, String password) {
+    this.eventId = UUID.randomUUID().toString();
+    this.eventType = "USER_CREATED";
+    this.timestamp = LocalDateTime.now();
+    this.correlationId = UUID.randomUUID().toString();
+    this.userId = userId;
+    this.cpf = cpf;
+    this.nome = nome;
+    this.email = email;
+    this.telefone = telefone;
+    this.dataCadastro = dataCadastro;
+    this.password = password;
+}
 
     public String getEventId() {
         return eventId;

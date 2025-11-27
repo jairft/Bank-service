@@ -15,6 +15,8 @@ import com.accountservice.model.PixKey;
 public interface PixKeyRepository extends JpaRepository<PixKey, Long> {
     
     List<PixKey> findByUserId(Long userId);
+
+    Optional<PixKey> findByKeyValue(String keyValue);
     
     Optional<PixKey> findByKeyValueAndKeyType(String keyValue, PixKey.PixKeyType keyType);
     

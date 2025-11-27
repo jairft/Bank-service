@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/users/**
+
+            - id: account-service
+              uri: lb://account-service
+              predicates:
+                - Path=/api/accounts/**,/api/transactional-password/**,/api/pix/**,/api/cards/**
+
+
+# 🔐 Configuração JWT
+jwt:
+  secret: minhaChaveSecretaSuperSeguraParaSistemaBancario2024
+  expiration: 86400000
+
+# 🎯 Eureka Service Discovery
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+# 📊 Monitoramento
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

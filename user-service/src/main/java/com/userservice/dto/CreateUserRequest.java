@@ -24,7 +24,12 @@ public class CreateUserRequest {
     @Size(min = 10, max = 15, message = "Telefone deve ter entre 10 e 15 caracteres")
     private String telefone;
 
-    
+    @NotBlank(message = "Password é obrigatório")
+    @Size(min = 6, message = "Password deve ter no mínimo 6 caracteres")
+    private String password;
+
+    @NotBlank(message = "Confirmação do password é obrigatória")
+    private String confirmPassword;
 
     /**
      * @return String return the cpf
@@ -82,4 +87,31 @@ public class CreateUserRequest {
         this.telefone = telefone;
     }
 
+    /**
+     * @return String return the password
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * @param password the password to set
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * @return String return the confirmPassword
+     */
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    /**
+     * @param confirmPassword the confirmPassword to set
+     */
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
+    }
 }

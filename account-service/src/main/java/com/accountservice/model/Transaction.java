@@ -3,6 +3,8 @@ package com.accountservice.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,11 +49,9 @@ public class Transaction {
     private TransactionStatus status;
     
     @Column(name = "created_at", nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
     
-    public enum TransactionType {
-        DEPOSIT, WITHDRAW, PIX, TRANSFER
-    }
     
     public enum TransactionStatus {
         PENDING, COMPLETED, FAILED, CANCELLED

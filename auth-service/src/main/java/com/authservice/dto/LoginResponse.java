@@ -8,13 +8,13 @@ public class LoginResponse {
     private String type = "Bearer";
     private Long userId;
     private String email;
-    private String nome;
+    private String status;
 
-    public LoginResponse(String token, Long userId, String email, String nome) {
+    public LoginResponse(String token, Long userId, String email, String status) {
         this.token = token;
         this.userId = userId;
         this.email = email;
-        this.nome = nome;
+        this.status = status;
     }
 }
 

@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,147 +20,41 @@ public class UserCreatedEvent {
     private String email;
     private String telefone;
     private LocalDateTime dataCadastro;
-    
-    
 
-    /**
-     * @return String return the eventId
-     */
-    public String getEventId() {
-        return eventId;
-    }
+    // 🔹 Nova propriedade: senha já definida
+    private String password;
 
-    /**
-     * @param eventId the eventId to set
-     */
-    public void setEventId(String eventId) {
-        this.eventId = eventId;
-    }
+    // Getters e setters
+    public String getEventId() { return eventId; }
+    public void setEventId(String eventId) { this.eventId = eventId; }
 
-    /**
-     * @return String return the eventType
-     */
-    public String getEventType() {
-        return eventType;
-    }
+    public String getEventType() { return eventType; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
 
-    /**
-     * @param eventType the eventType to set
-     */
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    /**
-     * @return LocalDateTime return the timestamp
-     */
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
+    public String getCorrelationId() { return correlationId; }
+    public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
 
-    /**
-     * @param timestamp the timestamp to set
-     */
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    /**
-     * @return String return the correlationId
-     */
-    public String getCorrelationId() {
-        return correlationId;
-    }
+    public String getCpf() { return cpf; }
+    public void setCpf(String cpf) { this.cpf = cpf; }
 
-    /**
-     * @param correlationId the correlationId to set
-     */
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    /**
-     * @return Long return the userId
-     */
-    public Long getUserId() {
-        return userId;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    /**
-     * @param userId the userId to set
-     */
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
 
-    /**
-     * @return String return the cpf
-     */
-    public String getCpf() {
-        return cpf;
-    }
+    public LocalDateTime getDataCadastro() { return dataCadastro; }
+    public void setDataCadastro(LocalDateTime dataCadastro) { this.dataCadastro = dataCadastro; }
 
-    /**
-     * @param cpf the cpf to set
-     */
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-
-    /**
-     * @return String return the nome
-     */
-    public String getNome() {
-        return nome;
-    }
-
-    /**
-     * @param nome the nome to set
-     */
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    /**
-     * @return String return the email
-     */
-    public String getEmail() {
-        return email;
-    }
-
-    /**
-     * @param email the email to set
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * @return String return the telefone
-     */
-    public String getTelefone() {
-        return telefone;
-    }
-
-    /**
-     * @param telefone the telefone to set
-     */
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    /**
-     * @return LocalDateTime return the dataCadastro
-     */
-    public LocalDateTime getDataCadastro() {
-        return dataCadastro;
-    }
-
-    /**
-     * @param dataCadastro the dataCadastro to set
-     */
-    public void setDataCadastro(LocalDateTime dataCadastro) {
-        this.dataCadastro = dataCadastro;
-    }
-
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

@@ -4,6 +4,8 @@ package com.accountservice.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 
 public class TransactionResponse {
     private String transactionId;
@@ -12,6 +14,7 @@ public class TransactionResponse {
     private BigDecimal amount;
     private BigDecimal previousBalance;
     private BigDecimal newBalance;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
     private String status;
     private String message;

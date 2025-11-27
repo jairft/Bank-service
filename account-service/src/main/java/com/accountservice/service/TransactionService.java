@@ -2,6 +2,7 @@ package com.accountservice.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,13 +11,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.accountservice.dto.AccountTransactionDTO;
 import com.accountservice.dto.TransactionRequest;
 import com.accountservice.dto.TransactionResponse;
 import com.accountservice.exception.AccountNotFoundException;
 import com.accountservice.exception.InsufficientBalanceException;
 import com.accountservice.exception.InvalidTransactionalPasswordException;
 import com.accountservice.model.Account;
+import com.accountservice.model.PixTransaction;
 import com.accountservice.model.Transaction;
+import com.accountservice.model.TransactionType;
+import com.accountservice.repository.PixTransactionRepository;
 import com.accountservice.repository.TransactionRepository;
 
 @Service
@@ -27,11 +32,13 @@ public class TransactionService {
     private final TransactionalPasswordService passwordService;
     private final AccountService accountService;
     private final TransactionRepository transactionRepository;
+    private final PixTransactionRepository pixTransactionRepository;
     
-    public TransactionService(AccountService accountService, TransactionRepository transactionRepository, TransactionalPasswordService passwordService) {
+    public TransactionService(AccountService accountService, TransactionRepository transactionRepository, TransactionalPasswordService passwordService, PixTransactionRepository pixTransactionRepository) {
         this.accountService = accountService;
         this.transactionRepository = transactionRepository;
         this.passwordService = passwordService;
+        this.pixTransactionRepository = pixTransactionRepository;
     }
     
     @Transactional
@@ -52,7 +59,7 @@ public class TransactionService {
         // Registra a transação
         Transaction transaction = createTransaction(
                 updatedAccount,
-                Transaction.TransactionType.DEPOSIT,
+                TransactionType.DEPOSIT,
                 request.getAmount(),
                 request.getDescription(),
                 Transaction.TransactionStatus.COMPLETED
@@ -101,7 +108,7 @@ public class TransactionService {
         // Registra a transação
         Transaction transaction = createTransaction(
                 updatedAccount,
-                Transaction.TransactionType.WITHDRAW,
+                TransactionType.WITHDRAW,
                 request.getAmount(),
                 request.getDescription(),
                 Transaction.TransactionStatus.COMPLETED
@@ -120,7 +127,7 @@ public class TransactionService {
     }
     
     private Transaction createTransaction(Account account, 
-                                        Transaction.TransactionType type, 
+                                        TransactionType type, 
                                         BigDecimal amount, 
                                         String description, 
                                         Transaction.TransactionStatus status) {
@@ -133,7 +140,7 @@ public class TransactionService {
         transaction.setDescription(description);
         
         // Calcula saldo anterior corretamente
-        BigDecimal previousBalance = type == Transaction.TransactionType.DEPOSIT 
+        BigDecimal previousBalance = type == TransactionType.DEPOSIT 
             ? account.getBalance().subtract(amount) 
             : account.getBalance().add(amount);
             
@@ -152,4 +159,67 @@ public class TransactionService {
     public List<Transaction> getAccountTransactions(Long accountId) {
         return transactionRepository.findByAccountId(accountId);
     }
+
+    // Método para listar transações recentes (depósitos + PIX)
+   public List<AccountTransactionDTO> getTransactionsForAccount(Long accountId) {
+        List<AccountTransactionDTO> list = new ArrayList<>();
+
+        // 1️⃣ Depósitos (entrada)
+        List<Transaction> deposits = transactionRepository.findByAccountId(accountId);
+        for (Transaction t : deposits) {
+            Account account = accountService.getAccountById(t.getAccountId())
+                    .orElseThrow(() -> new RuntimeException("Conta não encontrada para o depósito"));
+
+            AccountTransactionDTO dto = new AccountTransactionDTO();
+            dto.setType("DEPOSIT");
+            dto.setDirection("IN");
+            dto.setAmount(t.getAmount());
+            dto.setCreatedAt(t.getCreatedAt());
+            dto.setDescription(t.getDescription());
+            dto.setTransactionId(t.getTransactionId());
+            dto.setPixKey(null);
+
+            // Para depósitos, remetente = destinatário
+            dto.setFromUserName(account.getUserName());
+            dto.setToUserName(account.getUserName());
+
+            list.add(dto);
+        }
+
+        // 2️⃣ PIX (entrada e saída)
+        List<PixTransaction> pixList = pixTransactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId);
+        for (PixTransaction p : pixList) {
+            Account fromAccount = accountService.getAccountById(p.getFromAccountId())
+                    .orElseThrow(() -> new RuntimeException("Conta de origem não encontrada"));
+
+            Account toAccount = accountService.getAccountById(p.getToAccountId())
+                    .orElseThrow(() -> new RuntimeException("Conta de destino não encontrada"));
+
+            AccountTransactionDTO dto = new AccountTransactionDTO();
+            dto.setType("PIX");
+            dto.setAmount(p.getAmount());
+            dto.setCreatedAt(p.getCreatedAt());
+            dto.setDescription(p.getDescription());
+            dto.setTransactionId(p.getTransactionId());
+            dto.setPixKey(p.getPixKey());
+            dto.setFromUserName(fromAccount.getUserName());
+            dto.setToUserName(toAccount.getUserName());
+
+            // Determina direção da transação para a conta que estamos consultando
+            if (p.getFromAccountId().equals(accountId)) {
+                dto.setDirection("OUT"); // saiu da conta
+            } else {
+                dto.setDirection("IN");  // entrou na conta
+            }
+
+            list.add(dto);
+        }
+
+        // Ordena por data decrescente (mais recentes primeiro)
+        list.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+
+        return list;
+    }
+
+
 }

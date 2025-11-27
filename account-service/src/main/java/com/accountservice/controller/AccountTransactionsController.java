@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.accountservice.dto.AccountTransactionDTO;
 import com.accountservice.dto.TransactionRequest;
 import com.accountservice.dto.TransactionResponse;
 import com.accountservice.model.Account;
@@ -29,15 +30,17 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/accounts")
-public class AccountController {
+public class AccountTransactionsController {
     
-    private static final Logger log = LoggerFactory.getLogger(AccountController.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountTransactionsController.class);
     private final AccountService accountService;
     private final TransactionService transactionService;
+
     
-    public AccountController(AccountService accountService, TransactionService transactionService) {
+    public AccountTransactionsController(AccountService accountService, TransactionService transactionService) {
         this.accountService = accountService;
         this.transactionService = transactionService;
+       
     }
     
     // DEPÓSITO - Versão melhorada
@@ -55,7 +58,7 @@ public class AccountController {
     public ResponseEntity<TransactionResponse> withdraw(
             @PathVariable String accountNumber,
             @Valid @RequestBody TransactionRequest request,
-            @RequestParam String transactionalPassword) { // ✅ NOVO PARÂMETRO
+            @RequestParam String transactionalPassword) { 
         
         System.out.println("Sacando R$ " + request.getAmount() + " da conta: " + accountNumber);
         TransactionResponse response = transactionService.withdraw(accountNumber, request, transactionalPassword);
@@ -63,7 +66,7 @@ public class AccountController {
 }
     
    
-    @GetMapping("/{accountNumber}/transactions")
+    @GetMapping("/{accountNumber}/transactions/accounts")
     public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable String accountNumber) {
         log.info("Buscando extrato da conta: {}", accountNumber);
         
@@ -72,6 +75,20 @@ public class AccountController {
         
         List<Transaction> transactions = transactionService.getAccountTransactions(account.getId());
         return ResponseEntity.ok(transactions);
+    }
+
+    @GetMapping("/{accountId}/transactions")
+    public ResponseEntity<List<AccountTransactionDTO>> getTransactions(
+            @PathVariable Long accountId) {
+
+        List<AccountTransactionDTO> transactions = transactionService.getTransactionsForAccount(accountId);
+
+        // Opcional: limitar às últimas 5 transações
+        List<AccountTransactionDTO> last5 = transactions.stream()
+                .limit(5)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(last5);
     }
     
     // SALDO - Mantém o existente
@@ -107,6 +124,9 @@ public class AccountController {
         List<Map<String, String>> bankAccounts = accounts.stream()
             .map(account -> {
                 Map<String, String> info = new HashMap<>();
+                
+                info.put("id", account.getId().toString());  
+                info.put("titular", account.getUserName());
                 info.put("agencia", account.getAgencyNumber());
                 info.put("conta", account.getAccountNumber());
                 info.put("tipo", account.getType().toString());
@@ -118,4 +138,5 @@ public class AccountController {
         
         return ResponseEntity.ok(bankAccounts);
     }
+
 }

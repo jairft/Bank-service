@@ -13,7 +13,7 @@ public class LoginRequest {
     private String email;
 
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
+    @Size(min = 6, message = "Senha de acesso deve ter no mínimo 6 caracteres")
     private String password;
 
 

@@ -12,11 +12,7 @@ public class ActivateAccountRequest {
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres")
     private String password;
-
-    @NotBlank(message = "Confirmação de senha é obrigatória")
-    private String confirmPassword;
-
-    
+  
 
     /**
      * @return String return the activationToken
@@ -49,15 +45,5 @@ public class ActivateAccountRequest {
     /**
      * @return String return the confirmPassword
      */
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    /**
-     * @param confirmPassword the confirmPassword to set
-     */
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
 
 }

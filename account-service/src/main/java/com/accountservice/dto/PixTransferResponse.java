@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.accountservice.model.PixTransaction;
+import com.accountservice.model.TransactionType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 
@@ -11,6 +12,7 @@ public class PixTransferResponse {
     private String transactionId;
     private String status;
     private BigDecimal amount;
+    private TransactionType type;
     private String fromAccount;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
@@ -78,6 +80,18 @@ public class PixTransferResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+
+
+    public TransactionType getType() {
+        return type;
+    }
+
+
+
+    public void setType(TransactionType type) {
+        this.type = type;
     }
 
     

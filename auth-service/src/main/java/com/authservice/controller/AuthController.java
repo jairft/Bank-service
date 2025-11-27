@@ -1,17 +1,32 @@
 package com.authservice.controller;
 
 
-import com.authservice.dto.*;
-import com.authservice.service.AuthService;
-import jakarta.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.authservice.dto.ActivateAccountRequest;
+import com.authservice.dto.ActivationResponse;
+import com.authservice.dto.LoginRequest;
+import com.authservice.dto.LoginResponse;
+import com.authservice.dto.ResetPasswordRequest;
+import com.authservice.dto.UpdatePasswordRequest;
+import com.authservice.dto.ValidateTokenResponse;
+import com.authservice.service.AuthService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -118,31 +133,20 @@ public class AuthController {
         }
     }
 
+    // Etapa 1 - Solicitar redefinição
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
-        try {
-            // Em produção, isso geraria um token e enviaria email
-            // Por enquanto, vamos usar o resetPassword diretamente
-            ResetPasswordRequest request = new ResetPasswordRequest();
-            request.setEmail(email);
-            request.setNewPassword("temp123"); // Senha temporária
-            request.setConfirmNewPassword("temp123");
-            
-            return ResponseEntity.ok("Solicitação de redefinição processada. Verifique os logs.");
-            
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        }
+    public ResponseEntity<String> forgotPassword(@RequestBody ResetPasswordRequest request) {
+        String response = authService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(response);
     }
 
+    // Etapa 2 - Confirmar redefinição
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestParam String token, 
-                                            @RequestParam String newPassword) {
-        try {
-            String result = authService.confirmResetPassword(token, newPassword);
-            return ResponseEntity.ok(result);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-        }
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        String response = authService.confirmPasswordReset(request);
+        return ResponseEntity.ok(response);
     }
+
+
+
 }

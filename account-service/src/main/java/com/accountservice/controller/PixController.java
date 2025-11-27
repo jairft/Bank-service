@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.accountservice.dto.PixKeyRequest;
+import com.accountservice.dto.PixKeyRequestInfo;
+import com.accountservice.dto.PixKeyResponseInfo;
 import com.accountservice.dto.PixTransferRequest;
 import com.accountservice.dto.PixTransferResponse;
 import com.accountservice.model.PixKey;
@@ -52,28 +54,37 @@ public class PixController {
         return ResponseEntity.ok(pixKeys);
     }
     
-    // INATIVAR CHAVE PIX
+    // EXCLUIR CHAVE PIX
     @DeleteMapping("/keys/{keyId}")
-    public ResponseEntity<String> deactivatePixKey(
+    public ResponseEntity<String> deletePixKey(
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long keyId) {
-        
-        log.info("Inativando chave PIX {} do usuário: {}", keyId, userId);
-        pixService.deactivatePixKey(userId, keyId);
-        return ResponseEntity.ok("Chave PIX inativada com sucesso");
-    }
+
+        log.info("Excluindo chave PIX {} do usuário: {}", keyId, userId);
+        pixService.deletePixKey(userId, keyId);
+        return ResponseEntity.ok("Chave PIX excluída com sucesso");
+}
+
     
     // REALIZAR TRANSFERÊNCIA PIX
     @PostMapping("/transfer")
     public ResponseEntity<PixTransferResponse> transferPix(
             @RequestHeader("X-User-Id") Long userId,
-            @Valid @RequestBody PixTransferRequest request,
-            @RequestParam String transactionalPassword) { // ✅ NOVO PARÂMETRO
-        
-        System.out.println("Transferência PIX do usuário: " + userId);
-        PixTransferResponse response = pixService.transferPix(userId, request, transactionalPassword);
+            @RequestParam String keyValue,             // valor da chave PIX (ex: maria@email.com)
+            @Valid @RequestBody PixTransferRequest request) {
+
+        System.out.println("💸 Transferência PIX do usuário: " + userId + " para chave " + keyValue);
+
+        PixTransferResponse response = pixService.transferPix(
+                userId,
+                request,
+                keyValue,
+                request.getPassword() // senha vem do body
+        );
+
         return ResponseEntity.ok(response);
-}
+    }
+
     
     // CONSULTAR CHAVE PIX
     @GetMapping("/keys/check/{keyType}/{keyValue}")
@@ -90,5 +101,10 @@ public class PixController {
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         log.error("Erro na operação PIX: {}", ex.getMessage());
         return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @PostMapping("/search")
+    public PixKeyResponseInfo searchPixKey(@RequestBody PixKeyRequestInfo request) {
+        return pixService.findPixKey(request);
     }
 }
