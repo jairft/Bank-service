@@ -209,16 +209,6 @@ Acesse:
 
 ---
 
-# 📜 **Roadmap**
-
-- [ ] Testes unitários JUnit  
-- [ ] Testes integrados dos serviços  
-- [ ] Métricas com Spring Actuator  
-- [ ] Logs distribuídos com ELK  
-- [ ] UI para admin  
-- [ ] WebSocket para atualizações de saldo  
-
----
 
 # 👤 **Autor**
 
