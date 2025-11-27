@@ -177,9 +177,6 @@ Acesse:
 
 # 🖼️ **Screenshots da Aplicação**
 
-> Coloque suas imagens nesta pasta:  
-📁 **docs/screenshots/**
-
 
 | Tela | Imagem |
 |------|--------|
