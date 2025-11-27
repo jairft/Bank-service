@@ -180,7 +180,6 @@ Acesse:
 > Coloque suas imagens nesta pasta:  
 📁 **docs/screenshots/**
 
-E continue esta tabela abaixo:
 
 | Tela | Imagem |
 |------|--------|
